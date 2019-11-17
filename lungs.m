@@ -1,57 +1,60 @@
-function [vO2j, vCO2j, vHCO3j, vCaj, vFej, vNaj, vErythrocytesj, vGlucosej] = lungs(W, vCai, vNai, vGlucosei)
+function [bloodout, Cout] = lungs(vblood, Cvector)
     % This function finds the output terms for each component coming out of
     % the lungs.
-    % Input: W = weight; vCai = volumetric flow rate of calcium going in;
-    % vNai = volumetric flow rate of sodium going in; vGlucosei =
-    % volumetric flow rate of glucose going in
-    % Output: vO2j = volumetric flow rate of oxygen going out; vCO2 =
-    % volumetric flow rate of carbon dioxide going out; vHCO3j = volumetric
-    % flow rate of bicarbonate going out; vCaj = volumetric flow rate of
-    % calcium going out; vFej = volumetric flow rate of iron going out; 
-    % vNaj = volumetric flow rate of sodium going out; vErythrocytesj = 
-    % volumetric flow rate of erythrocytes going out; vGlucosej = 
-    % volumetric flow rate of glucose going out
+    % Input: W = weight;
+    %        Cvector - vector containing initial concentrations of each component
+    %        entering heart
+    % Output: Cout - vector containing final concentrations of each
+    %         component leaving heart
     
     % Finding volumetric flow rate of blood (volumetric flow rate of blood
     % in = out)
-    mblood = 0.07*W; %in kg
-    pblood = 1.06; %in kg/L %this value is dependent on other factors - can we use it? should we use 1?
-    vblood = mblood/pblood; %in L/min
+%     mblood = 0.07*W; %in kg
+%     pblood = 1.06; %in kg/L %this value is dependent on other factors - can we use it? should we use 1?
+%     vblood = mblood/pblood; %in L/min
     
+    Cout = [];
     % Finding volumetric flow rate out of oxygen
-    CiO2 = 0.05; %5mL/100mL %this should be dependent on hemoglobin - find more on this later
+    %CiO2 = 0.05; %5mL/100mL %this should be dependent on hemoglobin - find more on this later
     CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
                             %40 mmHg (this might also depend on hemoglobin)
-    vO2i = vblood*(CiO2+CdeoxygenatedO2); %O2 in, L/min
+    vO2i = vblood*(Cvector(2)+CdeoxygenatedO2); %O2 in, L/min
     vO2cons = 0.0053; %O2 consumed (should depend on hemoglobin, other things), L/min
     vO2j = vO2i - vO2cons; %O2 out, L/min
+    Cout(2) = vO2j/vblood;
     
     % Finding volumetric flow rate out of carbon dioxide
-    CjCO2 = 0.48; %48 mL/100 mL, should be dependent on hemoglobin, oxygen, things like that
-    vCO2j = vblood*CjCO2; %CO2 out, L/min
+    vCO2i = vblood*Cvector(3);
+    vCO2cons = vblood*(2/1000000);
+    %CjCO2 = 0.48; %48 mL/100 mL, should be dependent on hemoglobin, oxygen, things like that
+    vCO2j = vCO2i - vCO2cons; %CO2 out, L/min
+    Cout(3) = vCO2j/vblood;
     
     % Finding volumetric flow rate out of bicarbonate
-    rHCO3CO2 = 19.3/21.5; %ratio of bicarbonate to carbon dioxide in blood leaving lungs
+    rHCO3CO2 = Cvector(4)/Cvector(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
     vHCO3j = rHCO3CO2*vCO2j; %HCO3 out, L/min
+    Cout(4) = vHCO3j/vblood;
     
     % Finding volumetric flow rate out of calcium
-    vCaj = vCai; %calcium out, L/min
+    Cout(7) = Cvector(7); %calcium out, L/min
     
     % Finding volumetric flow rate out of iron
-    Cerythrocytes = 0.45; %45 mL/100 mL, this concentration changes depending on hemoglobin, but we need...
-                          %to figure out this relationship
-    Chemoglobin = 0.335; %g/mL, this concentration also changes, but maybe only depending on demographics
-                         %and anemia
-    Mhemoglobin = 65000; %g/mol
-    MFe = 55.845; %g/mol
-    CFe = (MFe*Chemoglobin*Cerythrocytes)/Mhemoglobin;
-    vFej = vblood*CFe; %iron out, L/min
-    
+     Cerythrocytes = 0.45; %45 mL/100 mL, this concentration changes depending on hemoglobin, but we need...
+%                           %to figure out this relationship
+     Chemoglobin = 0.335; %g/mL, this concentration also changes, but maybe only depending on demographics
+%                          %and anemia
+%     Mhemoglobin = 65000; %g/mol
+%     MFe = 55.845; %g/mol
+%     CFe = (MFe*Chemoglobin*Cerythrocytes)/Mhemoglobin;
+%     vFej = vblood*CFe; %iron out, L/min
+
+    Cout(8) = Cvector(8); %iron concentration doesn't change in lungs?
     % Finding volumetric flow rate out of sodium
-    vNaj = vNai; %sodium out, L/min
+    Cout(6) = Cvector(6); %sodium out, L/min
     
     % Finding volumetric flow rate out of erythrocytes
-    vErythrocytesj = vblood*Cerythrocytes; %erythrocytes out, L/min, once again this concentration changes
+    %vErythrocytesj = vblood*Cerythrocytes; %erythrocytes out, L/min, once again this concentration changes
+    Cout(1) = Cvector(1);
     
     % Finding volumetric flow rate out of glucose
     Chemoglobinblood = Chemoglobin*Cerythrocytes; %concentration of hemoglobin in blood, g/mL
@@ -68,7 +71,11 @@ function [vO2j, vCO2j, vHCO3j, vCaj, vFej, vNaj, vErythrocytesj, vGlucosej] = lu
     mglucosecons = nglucosecons*Mglucose; %g/min
     pglucose = 1560; %g/L, is this what other people are using?
     vglucosecons = mglucosecons/pglucose; %L/min
+    vGlucosei = Cvector(5)*vblood;
     vGlucosej = vGlucosei - vglucosecons; %volumetric flow rate of glucose out, L/min
+    Cout(5) = vGlucosej/vblood;
+    bloodout = vblood;
+end
     
     %*thoughts I had while coding that we should consider: putting in
     %checks to make sure outflows that go directly to the next organ are
