@@ -15,10 +15,8 @@ function [bloodout, Cout] = lungs(vblood, Cvector)
     
     Cout = [];
     % Finding volumetric flow rate out of oxygen
-    %CiO2 = 0.05; %5mL/100mL %this should be dependent on hemoglobin - find more on this later
-    CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
-                            %40 mmHg (this might also depend on hemoglobin)
-    vO2i = vblood*(Cvector(2)+CdeoxygenatedO2); %O2 in, L/min
+    CiO2 = 0.05; %5mL/100mL %this should be dependent on hemoglobin - find more on this later
+    vO2i = vblood*(Cvector(2)+CiO2); %O2 in, L/min
     vO2cons = 0.0053; %O2 consumed (should depend on hemoglobin, other things), L/min
     vO2j = vO2i - vO2cons; %O2 out, L/min
     Cout(2) = vO2j/vblood;
