@@ -15,23 +15,25 @@ function [bloodout, Cout] = lungs(vblood, Cvector)
     
     Cout = [];
     % Finding volumetric flow rate out of oxygen
-    CiO2 = 0.05; %5mL/100mL %this should be dependent on hemoglobin - find more on this later
-    vO2i = vblood*(Cvector(2)+CiO2); %O2 in, L/min
-    vO2cons = 0.0053; %O2 consumed (should depend on hemoglobin, other things), L/min
-    vO2j = vO2i - vO2cons; %O2 out, L/min
-    Cout(2) = vO2j/vblood;
+    CiO2 = 0.000001964637; %5mL/100mL becomes .000001964637 mol
+    %CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
+                            %40 mmHg (this might also depend on hemoglobin)
+    nO2i = vblood*(Cvector(2)+CiO2); %O2 in, mL/min
+    nO2cons = .0002082515; %5.3 mL/min becomes .0002082515 mol/min
+    nO2j = nO2i - nO2cons; %O2 out, mol/min
+    Cout(2) = nO2j/vblood; %mol/mL
     
     % Finding volumetric flow rate out of carbon dioxide
-    vCO2i = vblood*Cvector(3);
-    vCO2cons = vblood*(2/1000000);
+    nCO2i = vblood*Cvector(3);
+    nCO2cons = vblood*(.0000015716531); %vblood(mL/min) and concentration of blood consumed (mol/mL)
     %CjCO2 = 0.48; %48 mL/100 mL, should be dependent on hemoglobin, oxygen, things like that
-    vCO2j = vCO2i - vCO2cons; %CO2 out, L/min
-    Cout(3) = vCO2j/vblood;
+    nCO2j = nCO2i - nCO2cons; %CO2 out, L/min
+    Cout(3) = nCO2j/vblood;
     
     % Finding volumetric flow rate out of bicarbonate
     rHCO3CO2 = Cvector(4)/Cvector(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
-    vHCO3j = rHCO3CO2*vCO2j; %HCO3 out, L/min
-    Cout(4) = vHCO3j/vblood;
+    nHCO3j = rHCO3CO2*nCO2j; %HCO3 out, mol/min
+    Cout(4) = nHCO3j/vblood;
     
     % Finding volumetric flow rate out of calcium
     Cout(7) = Cvector(7); %calcium out, L/min
@@ -59,19 +61,19 @@ function [bloodout, Cout] = lungs(vblood, Cvector)
     Chemoglobinbloodmol = Chemoglobinblood/Mhemoglobin; %concentration of hemoglobin in blood, mol/mL
     CO2bloodmol = 4*Chemoglobinbloodmol; %concentration of oxygen in blood dependent on this value of...
                                          %hemoglobin, mol/mL
-    nO2cons = CO2bloodmol*vblood*1000; %molar flow rate of oxygen consumed, mol/min - can we somehow...
+    %nO2cons = CO2bloodmol*vblood*1000; %molar flow rate of oxygen consumed, mol/min - can we somehow...
                                        %convert this into mL/min to get a
                                        %more accurate value of oxygen
                                        %consumed in the oxygen accounting
                                        %equation?
     nglucosecons = 6*nO2cons; %molar flow rate of glucose consumed, mol/min
-    Mglucose = 180.18; %g/mol
-    mglucosecons = nglucosecons*Mglucose; %g/min
-    pglucose = 1560; %g/L, is this what other people are using?
-    vglucosecons = mglucosecons/pglucose; %L/min
-    vGlucosei = Cvector(5)*vblood;
-    vGlucosej = vGlucosei - vglucosecons; %volumetric flow rate of glucose out, L/min
-    Cout(5) = vGlucosej/vblood;
+%     Mglucose = 180.18; %g/mol
+%     mglucosecons = nglucosecons*Mglucose; %g/min
+%     pglucose = 1560; %g/L, is this what other people are using?
+%     vglucosecons = mglucosecons/pglucose; %L/min
+    nGlucosei = Cvector(5)*vblood;
+    nGlucosej = nGlucosei - nglucosecons; %molar flow rate of glucose out, mol/min
+    Cout(5) = nGlucosej/vblood;
     bloodout = vblood;
 end
     
