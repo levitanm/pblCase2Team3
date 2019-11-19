@@ -38,14 +38,14 @@ bloodflow0 = 1000*bloodweight/1.06; %blood flow out of heart per minute in mL, d
 % components
 
 
-    if gender == 0 %if loop sets volume percentage of red blood cells based on gender
-   cE = 0.4345;
-    elseif gender == 1
-   cE = 0.402;  
-    end
+if gender == 0 %if loop sets volume percentage of red blood cells based on gender
+cE = 0.4345;
+elseif gender == 1
+cE = 0.402;  
+end
  
 %set concentration of O2 and CO2 in mol/mL at BTP in venous blood
-cO2 = 0.00000569745;
+cO2 = 0.00000785855;
 cCO2 = 0.0000235;
 %concentration of bicarbonate in venous blood, in mol/L
 cHCO3 = 0.00002033;
@@ -138,6 +138,7 @@ cNatrack=[cNatrack cvector0(6)];
 cCatrack=[cCatrack cvector0(7)];
 cIrontrack=[cIrontrack cvector0(8)];
 
+A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvectorkidneyj];
 end
 
 figure
@@ -404,9 +405,6 @@ end
 
 
 
-
-
-
 function [bloodflowj, cvectorout]=liver(V,cvectori,G,mass,LW)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
@@ -440,12 +438,12 @@ else
     p=1.2e10;
 end
     %Calculate volume of the body
-    Vbody=0.07*mass*1000/1.056;
+    Vblood=0.07*mass*1000/1.056;
     %Calculate the number of RBCs entering liver based on concentration,
     %flow rate, and pure RBC density
     RBCi=p*V*cvectori(1);
     %Consume some based on body size
-    RBCcons=5.55555e-6*cvectori(1)*Vbody;%this had vickis original p here, confirm
+    RBCcons=5.55555e-6*cvectori(1)*Vblood;%this had vickis original p here, confirm
     %Find pure volume of RBCs we now have based on number and density 
     VRBCj=(RBCi-RBCcons)/p;
     %Calculate volume of plasma that entered
@@ -460,8 +458,8 @@ end
 %nO2i=molar flow rate of O2/min in
 %nO2j=molar flow rate of O2/min out
 %nO2cons=molar consumption rate of O2/min
-nO2i=0.0006286842*LW/100;
-nO2cons=0.0002389*LW/100;
+nO2i= cvectori(2)*V; %0.0006286842*(LW/100);
+nO2cons=0.0002389*(LW/100);
 nO2j=nO2i-nO2cons;
 cvectorout(2)=nO2j/V;
 
@@ -565,4 +563,3 @@ Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08))/flow; %calcium intake
 Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
 outflow = flow;
 end
-
