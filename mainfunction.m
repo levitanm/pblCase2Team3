@@ -301,8 +301,8 @@ cvectorj(6)=cvectori(6);
 cvectorj(7)=cvectori(7);
 cvectorj(8)=cvectori(8);
 
-%Consume oxygen at 3.5 mL (in moles) per gram per minute
-MO2j=Mvector(2)-0.0001375246*brainmass;
+%Consume oxygen at 3.5 mL (in moles) per 100 gram per minute
+MO2j=Mvector(2)-0.0001375246*(brainmass/100);
 %Consume glucose at a rate of 120g/day
 MGlucosej=Mvector(5)-(0.6660746/86400);%moles of glucose in - glucose requirements per day in moles/minutes in the day
 %Calculate CO2 produced based on glucose consumed via respiration equation
