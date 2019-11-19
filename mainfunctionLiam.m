@@ -522,7 +522,7 @@ end
 
 
 function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ)
-T=86400;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
+T=1440;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
 Kidneymass=300; %mass of the kidneys combined in grams
 
 %Initialize all intakes
@@ -533,13 +533,14 @@ bloodflowj=bloodflowi;
 
 MEj=Mvector(1);
 MIronj=Mvector(8);
-
 MO2j=0.85*Mvector(2);
 MNaj=(Mvector(6)-(Kidneymass/100)*((10*(25450*(Mvector(2)-MO2j)))-5))/1000;
 MCaj=0.98*Mvector(7);
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
-MHCO3j=Mvector(4)-0.15*(Mvector(4))+(.004/T);
+rHCO3CO2 = Mvector(4)/Mvector(3);
+MHCO3gen = rHCO3CO2*((Mvector(2)-MO2j)*RQ);
+MHCO3j=Mvector(4)-0.15*(Mvector(4))+(.004/T)+MHCO3gen;
 
 %Recompute all concentrations using original mass of blood and new values
 
@@ -551,7 +552,6 @@ cEj=MEj/bloodflowj;
 cGlucosej=MGlucosej/bloodflowj;
 cHCO3j=MHCO3j/bloodflowj;
 cCaj=MCaj/bloodflowj;
-
 cvectorj=[cEj cO2j cCO2j cHCO3j cGlucosej cNaj cCaj cIronj];
 
 end
