@@ -8,7 +8,7 @@ Cout(5) = (flow*Cin(5) + (.8*carbs)/180.156)/flow; %130g of carbs, 80 percent is
 Cout(6) = (flow*Cin(6) + (sodiumintake/(1000*22.99)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
 Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08))/flow; %calcium intake should be around 1000 mg
 Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
-%Vicki added in loss of 1mg Iron/day which occurs via the skin
+%Vicki added in loss of 1mg Iron/day which occurs via the skin, given in terms of mol/min
 %Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845)-1/(1440*1000*55.845))/flow;
 outflow = flow;
 end
