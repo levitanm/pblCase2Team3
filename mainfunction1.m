@@ -69,7 +69,7 @@ cNatrack=[cvector0(6)];
 cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
 
-for loop=1:100
+for loop=1:1440
 %Run initial venous blood through the heart
 [bloodflow, cvector] = lungs(bloodflow0, cvector0);
 %Run blood from lungs to the heart
@@ -219,7 +219,7 @@ function [bloodout, Cout] = lungs(vblood, Cvector)
     %CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
                             %40 mmHg (this might also depend on hemoglobin)
     nO2i = vblood*(Cvector(2)+CiO2); %O2 in, mL/min
-    nO2cons = .0002082515; %5.3 mL/min becomes .0002082515 mol/min
+    nO2cons = 0.05*nO2i;%.0002082515; %5.3 mL/min becomes .0002082515 mol/min
     nO2j = nO2i - nO2cons; %O2 out, mol/min
     Cout(2) = nO2j/vblood; %mol/mL
     
@@ -305,12 +305,12 @@ cvectorj(8)=cvectori(8);
 %Consume oxygen at 3.5 mL (in moles) per 100 gram per minute
 MO2j=Mvector(2)-0.0001375246*(brainmass/100);
 %Consume glucose at a rate of 120g/day
-MGlucosej=Mvector(5)-(0.6660746/86400);%moles of glucose in - glucose requirements per day in moles/minutes in the day
+MGlucosej=Mvector(5)-(0.6660746/1440);%moles of glucose in - glucose requirements per day in moles/minutes in the day
 %Calculate CO2 produced based on glucose consumed via respiration equation
-MCO2j=Mvector(3)+6*(0.6660746/86400);
+MCO2j=Mvector(3)+6*(0.6660746/1440);
 %Calculate HCO3 made when the CO2 is produced
 rHCO3CO2=19.3/21.5; %ratio of bicarbonate to carbon dioxide in blood leaving lungs
-HCO3j=Mvector(4)+rHCO3CO2*6*(0.6660746/86400);
+HCO3j=Mvector(4)+rHCO3CO2*6*(0.6660746/1440);
 
 %Calculate values above as concentrations and add them to cvectorj
 cvectorj(2)=MO2j/bloodflowj;
@@ -571,12 +571,13 @@ end
 function [outflow, Cout] = otherblood(flow, Cin, carbs, calciumintake, sodiumintake, ironintake)
 Cout = [];
 Cout(1) = Cin(1);
-Cout(2) = Cin(2);
+%CO2cons = 
+Cout(2) = Cin(2);%-CO2cons;
 Cout(3) = Cin(3);
 Cout(4) = Cin(4);
 Cout(5) = (flow*Cin(5) + (.8*carbs)/(180.156*1440))/flow; %130g of carbs, 80 percent is directly translated to glucose, 20% is fructose and galactose which goes to the liver and may be converted to glucose at a later stage so another term is incoming
 Cout(6) = (flow*Cin(6) + (sodiumintake/(1000*22.99*1440)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
 Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/flow; %calcium intake should be around 1000 mg
-Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845*1440))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
+Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
 outflow = flow;
 end
