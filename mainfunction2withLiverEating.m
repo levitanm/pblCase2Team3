@@ -389,13 +389,31 @@ cvectorout(7)=cvectori(7);
 %Calculates the concentration flow rate of Fe out
 %Assume no generation since
 
-% Glucose needs a big ol generation term
+%This function calculates the rate of the liver's glucose buffer function where
+%the liver consumes or generates glucose to regulate glucose levels in the blood.
+%The consumeorgenerate equation was extracted with excel where equations
+%describing [insulin] vs. [glucose] and [glucagon] vs. [glucose] from 
+%a research paper were substracted.
+%Overall equation is normalized at(x,y)=(6,0) where x=Glucose Concentration in blood (mM) 
+%and y=Insulin-Glucagon levles (pmol/L).
+%The equation was chosen to be zeroed at 6mM glucose concentration in
+%blood since 6mM is the critical threshold value of glucose in the blood
+%that determines if liver consumes or generates glucose to buffer glucose levels
+%Actual molar rate of glucose generated/consumed factors into account that
+%the maximum rate of hepatic glucose uptake is approx. 26umoles/min per kg
+%bodyweight
+%The maximum value of nGlucosecons, when x=9mM and y=300
+%is thus 26umoles/min per kg bodyweight
+%Dividing consumeorgenerate by 26*W*10^-6 scales consumeorgenerate value 
+%to 26umoles/min per kg bodyweight at (9,300) to give nGlucosegen and
+%nGlucosecons terms in moles/min
+
 consumeorgenerate=0.8144*cvectori(5)^3-9.622*cvectori(5)^2+108.74*cvectori(5)-480.69;
 if consumeorgenerate < 0
-    nGlucosegen=consumeorgenerate/200;
+    nGlucosegen=consumeorgenerate/(26*W*10^-6);
     nGlucosecons=0;
 elseif consumeorgenerate > 0
-    nGlucosecons=consumeorgenerate/200;
+    nGlucosecons=abs(consumeorgenerate)/(26*W*10^-6);
     nGlucosegen=0;
 else
     nGlucosegen=0;
