@@ -1,5 +1,4 @@
 function mainfunction2withLiverEating2()
-
 age = 30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
@@ -188,6 +187,15 @@ end
 
 function [bloodout, Cout, Ci] = lungs(vblood, Cvector)
 Cout = [];
+%Assume Lung Volume is 6 L. Assume dead space of .15 Liters. 
+vlung = 6;
+deadspace = .15;
+respiratoryrate = 15;
+alveoliventilation = (vlung-deadspace)*respiratoryrate; %L/min of air added to the aveloli
+%Assume oxygen added to alveloli is 21% of air
+alveoliO2 = .21*alveoliventilation;
+
+
 % Finding volumetric flow rate out of oxygen
 CiO2 = 0.000001964637; %5mL/100mL becomes .000001964637 mol
 %CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
@@ -287,9 +295,6 @@ Cout(4) = (Cvector(4)*flow + nHCO3j)/flow;
 outflow = flow;
 end
 
-
-
-
 function [bloodflowj, cvectorout]=liver(V,cvectori,G,mass,Ci,FerritinStores)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
@@ -376,7 +381,7 @@ cvectorout(4)=nHCO3j/V;
 %are consumed, approx 600mL are produced per day, and there are 135mM Na+
 %ions in bile.
 %nNaj=molar flow rate of sodium out
-nNacons=9.375e-9;
+nNacons=5.625e-6;
 nNai=cvectori(6)*V;
 nNaj=nNai-nNacons;
 cvectorout(6)=nNaj/V;
@@ -389,13 +394,32 @@ cvectorout(7)=cvectori(7);
 %Calculates the concentration flow rate of Fe out
 %Assume no generation since
 
-% Glucose needs a big ol generation term
-consumeorgenerate=0.8144*cvectori(5)^3-9.622*cvectori(5)^2+108.74*cvectori(5)-480.69;
+%This function calculates the rate of the liver's glucose buffer function where
+%the liver consumes or generates glucose to regulate glucose levels in the blood.
+%The consumeorgenerate equation was extracted with excel where equations
+%describing [insulin] vs. [glucose] and [glucagon] vs. [glucose] from 
+%a research paper were substracted.
+%Overall equation is normalized at(x,y)=(6,0) where x=Glucose Concentration in blood (mM) 
+%and y=Insulin-Glucagon levles (pmol/L).
+%The equation was chosen to be zeroed at 6mM glucose concentration in
+%blood since 6mM is the critical threshold value of glucose in the blood
+%that determines if liver consumes or generates glucose to buffer glucose levels
+%Actual molar rate of glucose generated/consumed factors into account that
+%the maximum rate of hepatic glucose uptake is approx. 26umoles/min per kg
+%bodyweight
+%The maximum value of nGlucosecons, when x=9mM and y=300
+%is thus 26umoles/min per kg bodyweight
+%Dividing consumeorgenerate by 26*W*10^-6 scales consumeorgenerate value 
+%to 26umoles/min per kg bodyweight at (9,300) to give nGlucosegen and
+%nGlucosecons terms in moles/min
+
+consumeorgenerate=0.8144*(cvectori(5)*10^6)^3-9.622*(cvectori(5)*10^6)^2+108.74*(cvectori(5)*10^6)-480.69;
+scalingterm = 300/(26*mass*10^-6);
 if consumeorgenerate < 0
-    nGlucosegen=-1*consumeorgenerate/200;
+    nGlucosegen=abs(consumeorgenerate)/scalingterm;
     nGlucosecons=0;
 elseif consumeorgenerate > 0
-    nGlucosecons=consumeorgenerate/200;
+    nGlucosecons=abs(consumeorgenerate)/scalingterm;
     nGlucosegen=0;
 else
     nGlucosegen=0;
@@ -412,7 +436,7 @@ cvectorout(5) = nGlucosej/V;
 
 %determine molar flow rate of iron in
 Mironin=V*cvectori(8);
-Mirondif=(V*0.00012592)-Mironin;%this number is desired steady state iron concentration in the blood
+Mirondif=(V*0.00012592)-Mironin;
 
 if Mirondif < 0
     FerritinStores=FerritinStores+Mirondif;
@@ -434,7 +458,6 @@ end
 
 
 end
-
 
 function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci)
 T=1440;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
