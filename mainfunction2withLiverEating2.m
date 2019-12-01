@@ -257,7 +257,7 @@ MGlucosej=Mvector(5)-(0.00003108*(brainmass/100));%moles of glucose in - glucose
 %Calculate CO2 produced based on glucose consumed via respiration equation
 MCO2j=Mvector(3)+6*(0.6660746/1440);
 %Calculate HCO3 made when the CO2 is produced
-rHCO3CO2=19.3/21.5; %ratio of bicarbonate to carbon dioxide in blood leaving lungs
+rHCO3CO2=Mvector(4)/Mvector(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
 HCO3j=Mvector(4)+rHCO3CO2*6*(0.6660746/1440);
 
 %Calculate values above as concentrations and add them to cvectorj
@@ -346,17 +346,6 @@ nO2cons=0.204*Ci;
 nO2j=nO2i-nO2cons;
 cvectorout(2)=nO2j/V;
 
-%Calculates concentration flow rate of CO2 out
-%nCO2i=molar flow rate of CO2/min in
-%nCO2j=molar flow rate of CO2/min out
-%nCO2gen=molar flow rate of CO2/min generated
-%RQ=Respiratory Quotient=mol CO2 produced/mol O2 consumed
-RQ=0.825;
-nCO2gen=RQ*nO2cons;
-nCO2i=cvectori(3)*V;
-nCO2j=nCO2i+nCO2gen;
-cvectorout(3)=nCO2j/V;
-
 %Calculates the required intake of protein in grams/min given a
 %person's demographic information
 %dprotein=daily protein intake in g/day
@@ -364,11 +353,22 @@ cvectorout(3)=nCO2j/V;
 dprotein=0.8*mass;
 protein=dprotein/1440;
 
+%Calculates concentration flow rate of CO2 out
+%nCO2i=molar flow rate of CO2/min in
+%nCO2j=molar flow rate of CO2/min out
+%nCO2gen=molar flow rate of CO2/min generated
+%RQ=Respiratory Quotient=mol CO2 produced/mol O2 consumed
+RQ=0.825;
+rHCO3CO2 = cvectori(4)/cvectori(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
+nCO2gen=RQ*nO2cons;
+nCO2i=cvectori(3)*V;
+nCO2j=nCO2i+nCO2gen-((protein/100)/rHCO3CO2); %if we are consuming bicarbonate, shouldn't carbon dioxide also be consumed
+cvectorout(3)=nCO2j/V;
+
 %Calculates the concentration flow rate of Bicarbonate out
 %Assume no generation of bicarbonate
 %%Also liver just takes in bicarbonate from the heart and stomach
 %1mole bicarbonate ions consumed by liver per 100g protein/day
-rHCO3CO2 = cvectori(4)/cvectori(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
 nHCO3gen = rHCO3CO2*nCO2gen; %HCO3 out, mol/min
 nHCO3i=cvectori(4)*V;
 nHCO3j=nHCO3i-(protein/100)+nHCO3gen;
@@ -484,12 +484,13 @@ MO2j=Mvector(2)-0.072*Ci;
 MNacons = (100/1440)/1000;
 MNaj = Mvector(6) - MNacons;
 %MNaj=(Mvector(6)-(Kidneymass/100)*((10*(25450*(Mvector(2)-MO2j)))-5))/1000;
-MCaj=0.98*Mvector(7);
+%MCaj=0.98*Mvector(7);
+MCaj = Mvector(7) - 3.8981e-09*bloodflowi;
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
 rHCO3O2=Mvector(4)/Mvector(3);
 MHCO3gen=rHCO3O2*((Mvector(2)-MO2j)*RQ);
-MHCO3j=Mvector(4)-0.15*(Mvector(4))+(.004/T)+MHCO3gen;
+MHCO3j=Mvector(4)+MHCO3gen; %-0.15*(Mvector(4))+(.004/T)
 
 %Recompute all concentrations using original mass of blood and new values
 
