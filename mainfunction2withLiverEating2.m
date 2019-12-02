@@ -1,9 +1,10 @@
 function mainfunction2withLiverEating2()
+
 age = 30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
 anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
-FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
+FerritinStores =0;% 0.0179; %Stored moles of iron in liver as ferritin
 
 RQ=0.825;%reaction quotients for the general body and
 %RQheart=0.7;
@@ -69,7 +70,7 @@ cNatrack=[cvector0(6)];
 cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
 
-for loop=1:1440
+for loop=1:50000
     %Run initial venous blood through the heart
     [bloodflow, cvector, Ci] = lungs(bloodflow0, cvector0);
     %Run blood from lungs to the heart
@@ -102,8 +103,9 @@ for loop=1:1440
     Mvectorheart=0.3*V*cvector1;
     cvectorliverin=(Mvectorotherbloodliver+Mvectorheart)/V;
     
-    [BFliverj, cvectorliverj] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores);
+    [BFliverj, cvectorliverj, FerritinStores1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores);
     %Redirect blood from liver to other blood and mix the two
+    FerritinStores=FerritinStores1;
     Mvectorotherbloodj=(cvectorotherbloodj*(BFotherbloodj-0.7*V))+(cvectorliverj*BFliverj);
     %Add the blood flow from other blood and liver to get new blood volume
     BFotherbloodj=BFotherbloodj-0.7*V+BFliverj;
@@ -187,15 +189,6 @@ end
 
 function [bloodout, Cout, Ci] = lungs(vblood, Cvector)
 Cout = [];
-%Assume Lung Volume is 6 L. Assume dead space of .15 Liters. 
-vlung = 6;
-deadspace = .15;
-respiratoryrate = 15;
-alveoliventilation = (vlung-deadspace)*respiratoryrate; %L/min of air added to the aveloli
-%Assume oxygen added to alveloli is 21% of air
-alveoliO2 = .21*alveoliventilation;
-
-
 % Finding volumetric flow rate out of oxygen
 CiO2 = 0.000001964637; %5mL/100mL becomes .000001964637 mol
 %CdeoxygenatedO2 = 0.16; %from graph and partial pressure of oxygen in entering deoxygenated blood being...
@@ -295,7 +288,10 @@ Cout(4) = (Cvector(4)*flow + nHCO3j)/flow;
 outflow = flow;
 end
 
-function [bloodflowj, cvectorout]=liver(V,cvectori,G,mass,Ci,FerritinStores)
+
+
+
+function [bloodflowj, cvectorout, FerritinStores1]=liver(V,cvectori,G,mass,Ci,FerritinStores)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
 %Input: G=Gender (1 if female, 0 if male)
@@ -359,16 +355,18 @@ protein=dprotein/1440;
 %nCO2gen=molar flow rate of CO2/min generated
 %RQ=Respiratory Quotient=mol CO2 produced/mol O2 consumed
 RQ=0.825;
-rHCO3CO2 = cvectori(4)/cvectori(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
+rHCO3CO2 = cvectori(4)/cvectori(3);
 nCO2gen=RQ*nO2cons;
 nCO2i=cvectori(3)*V;
-nCO2j=nCO2i+nCO2gen-((protein/100)/rHCO3CO2); %if we are consuming bicarbonate, shouldn't carbon dioxide also be consumed
+nCO2j=nCO2i+nCO2gen-((protein/100)/rHCO3CO2);
 cvectorout(3)=nCO2j/V;
+
 
 %Calculates the concentration flow rate of Bicarbonate out
 %Assume no generation of bicarbonate
 %%Also liver just takes in bicarbonate from the heart and stomach
 %1mole bicarbonate ions consumed by liver per 100g protein/day
+%rHCO3CO2 = cvectori(4)/cvectori(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
 nHCO3gen = rHCO3CO2*nCO2gen; %HCO3 out, mol/min
 nHCO3i=cvectori(4)*V;
 nHCO3j=nHCO3i-(protein/100)+nHCO3gen;
@@ -381,7 +379,7 @@ cvectorout(4)=nHCO3j/V;
 %are consumed, approx 600mL are produced per day, and there are 135mM Na+
 %ions in bile.
 %nNaj=molar flow rate of sodium out
-nNacons=5.625e-6;
+nNacons=9.375e-9;
 nNai=cvectori(6)*V;
 nNaj=nNai-nNacons;
 cvectorout(6)=nNaj/V;
@@ -394,25 +392,7 @@ cvectorout(7)=cvectori(7);
 %Calculates the concentration flow rate of Fe out
 %Assume no generation since
 
-%This function calculates the rate of the liver's glucose buffer function where
-%the liver consumes or generates glucose to regulate glucose levels in the blood.
-%The consumeorgenerate equation was extracted with excel where equations
-%describing [insulin] vs. [glucose] and [glucagon] vs. [glucose] from 
-%a research paper were substracted.
-%Overall equation is normalized at(x,y)=(6,0) where x=Glucose Concentration in blood (mM) 
-%and y=Insulin-Glucagon levles (pmol/L).
-%The equation was chosen to be zeroed at 6mM glucose concentration in
-%blood since 6mM is the critical threshold value of glucose in the blood
-%that determines if liver consumes or generates glucose to buffer glucose levels
-%Actual molar rate of glucose generated/consumed factors into account that
-%the maximum rate of hepatic glucose uptake is approx. 26umoles/min per kg
-%bodyweight
-%The maximum value of nGlucosecons, when x=9mM and y=300
-%is thus 26umoles/min per kg bodyweight
-%Dividing consumeorgenerate by 26*W*10^-6 scales consumeorgenerate value 
-%to 26umoles/min per kg bodyweight at (9,300) to give nGlucosegen and
-%nGlucosecons terms in moles/min
-
+% Glucose needs a big ol generation term
 consumeorgenerate=0.8144*(cvectori(5)*10^6)^3-9.622*(cvectori(5)*10^6)^2+108.74*(cvectori(5)*10^6)-480.69;
 scalingterm = 300/(26*mass*10^-6);
 if consumeorgenerate < 0
@@ -436,28 +416,33 @@ cvectorout(5) = nGlucosej/V;
 
 %determine molar flow rate of iron in
 Mironin=V*cvectori(8);
-Mirondif=(V*0.00012592)-Mironin;
+Mirondif=(V*0.00012592)-Mironin;%this number is desired steady state iron concentration in the blood
 
 if Mirondif < 0
-    FerritinStores=FerritinStores+Mirondif;
+    FerritinStores1=FerritinStores-Mirondif;
     cvectorout(8)=0.00012592;
 elseif FerritinStores > Mirondif && Mirondif>0
-    Mironadd=Mirondiff;
-    FerritinStores=FerritinStores-Mironadd;
+    Mironadd=Mirondif;
+    FerritinStores1=FerritinStores-Mironadd;
+    cvectorout(8)=(Mironadd+Mironin)/V;
+elseif FerritinStores > Mirondif && Mirondif==0
+    Mironadd=Mirondif;
+    FerritinStores1=FerritinStores;
     cvectorout(8)=(Mironadd+Mironin)/V;
 elseif FerritinStores < Mirondif && Mirondif>0
     Mironadd=FerritinStores;
     cvectorout(8)=(Mironadd+Mironin)/V;
-    FerritinStores=0;
+    FerritinStores1=0;
     
-elseif FerritinStores == 0
+elseif FerritinStores == 0 && Mirondif >= 0
     
     cvectorout(8)=cvectori(8);
-    
+    FerritinStores1=0;
 end
 
 
 end
+
 
 function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci)
 T=1440;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
@@ -481,16 +466,29 @@ MO2j=Mvector(2)-0.072*Ci;
 %MNacons = (MO2cons - 0.5)/0.1;
 % Convert to mol/min
 %MNacons = (MNacons/1000)*(Kidneymass/100);
-MNacons = (100/1440)/1000;
-MNaj = Mvector(6) - MNacons;
-%MNaj=(Mvector(6)-(Kidneymass/100)*((10*(25450*(Mvector(2)-MO2j)))-5))/1000;
-%MCaj=0.98*Mvector(7);
-MCaj = Mvector(7) - 3.8981e-09*bloodflowi;
+
+%this is new sodium stuff
+
+PNaconc=cvectori(6)*1e6; %plasma sodium concentration, converted to mmol/L for the sake of the equation
+%Naremoved=0.0043*(PNaconc)^3 - 1.6942*(PNaconc)^2 + 223.58*PNaconc - 9925; %sodium removed, micromol per minute
+Naremoved=0.0003*exp(0.0817*PNaconc);%sodium removed, micromol per minute
+MNaremoved=Naremoved/1e6;%sodium removed in moles
+MNaj = Mvector(6) - MNaremoved;
+
+%this is old sodium stuff
+% MNacons = (100/1440)/1000;
+% MNaj = Mvector(6) - MNacons;
+
+
+
+
+
+MCaj=Mvector(7) - 3.8981e-09*bloodflowi;
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
 rHCO3O2=Mvector(4)/Mvector(3);
 MHCO3gen=rHCO3O2*((Mvector(2)-MO2j)*RQ);
-MHCO3j=Mvector(4)+MHCO3gen; %-0.15*(Mvector(4))+(.004/T)
+MHCO3j=Mvector(4)+MHCO3gen;%-0.15*(Mvector(4))+(.004/T)
 
 %Recompute all concentrations using original mass of blood and new values
 
@@ -517,8 +515,8 @@ Cout(3) = (Cin(3)*flow + nCO2gen)/flow;
 rHCO3CO2 = Cin(4)/Cin(3);
 Cout(4) = (Cin(4)*flow + nCO2gen*rHCO3CO2)/flow;
 Cout(5) = (flow*Cin(5) + (.8*carbs)/(180.156*1440))/flow; %130g of carbs, 80 percent is directly translated to glucose, 20% is fructose and galactose which goes to the liver and may be converted to glucose at a later stage so another term is incoming
-Cout(6) = (flow*Cin(6) + (sodiumintake/(1000*22.99*1440)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
+Cout(6) = (flow*Cin(6) + (sodiumintake/(700*22.99*1440)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
 Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/flow; %calcium intake should be around 1000 mg
-Cout(8) = (flow*Cin(8) + (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
+Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
 outflow = flow;
 end
