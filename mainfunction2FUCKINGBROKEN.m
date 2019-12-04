@@ -75,9 +75,11 @@ bloodflowvec=[bloodflow0];
 bloodweightvec=[bloodweight];
 heartvec=[60];
 BPvec=[100];
-for loop=1:1440
+for loop=1:500
     
-    heartrate=baseheartrate+0.1346*(cE0*bloodflow0-cvector0(1)*bloodflow0);
+   
+    
+    heartrate=70;%baseheartrate+0.1346*(cE0*bloodflow0-cvector0(1)*bloodflow0);
     heartvec=[heartvec heartrate];
     bloodflow0 = (heartrate/baseheartrate)*bloodflow0;
     % all blood per min for 60 beats per min -> all blood per 60 beats
@@ -116,7 +118,7 @@ for loop=1:1440
     Mvectorheart=0.3*V*cvector1;
     cvectorliverin=(Mvectorotherbloodliver+Mvectorheart)/V;
     
-    [BFliverj, cvectorliverj, FerritinStores1, BP1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores,cE0,basebloodweight,bloodweight1);
+    [BFliverj, cvectorliverj, FerritinStores1, BP1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores,cE0,basebloodweight,bloodweight1, loop);
     %Redirect blood from liver to other blood and mix the two
     FerritinStores=FerritinStores1;
     Mvectorotherbloodj=(cvectorotherbloodj*(BFotherbloodj-0.7*V))+(cvectorliverj*BFliverj);
@@ -329,7 +331,7 @@ end
 
 
 
-function [bloodflowj, cvectorout, FerritinStores1, BP1]=liver(V,cvectori,G,mass,Ci,FerritinStores, cE0, basebloodweight, bloodweight)
+function [bloodflowj, cvectorout, FerritinStores1, BP1]=liver(V,cvectori,G,mass,Ci,FerritinStores, cE0, basebloodweight, bloodweight, loop)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
 %Input: G=Gender (1 if female, 0 if male)
@@ -484,7 +486,7 @@ elseif FerritinStores == 0 && Mirondif>0
 end
 
 %Calculate current blood pressure based on hematocrit and blood volume
-BP1=(1.8886*(cvectori(1)/cE0)-0.8886)*(38.178*log(bloodweight/basebloodweight)+100);
+BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvectori(1)/cE0)-0.8886);
 end
 
 
@@ -564,6 +566,8 @@ function [outflow, Cout, bloodweight1] = otherblood(flow, Cin, carbs, calciumint
 Cout = [];
 bleed=0.5;%rate of bleeding in mL/min
 waterin=1.389; %water flow rate in, in mL/min
+
+
 %Accounts for the bleeding of a certain volume at a steady rate when the
 %patient is anemic    
 if anemia == 0
@@ -573,7 +577,16 @@ else
 outflow = flow - bleed+waterin;%arbitrarily set bleeding rate to 0.5 mL/min
 bloodweight1=bloodweight-(bleed/1000)*1.056+(waterin/1000); %track blood loss as by subtracting mass lost from bloodweight
 end
-Cout(1) = Cin(1);
+%hopefully this adds blood cells
+bloodvol=0.07*70*1000/1.056;
+RBCnumber=5.4e9*bloodvol;
+RBCgen=0.008*RBCnumber/1440;
+mLgen=RBCgen/1.2e10;
+
+Cout(1) = (Cin(1)*flow+mLgen)/outflow;
+
+
+
 Cout(2) = (Cin(2)*flow-0.374*Ci)/outflow;
 nCO2gen = 0.374*Ci*RQ;
 Cout(3) = (Cin(3)*flow + nCO2gen)/outflow;
@@ -583,7 +596,5 @@ Cout(5) = (flow*Cin(5) + (.8*carbs)/(180.156*1440))/outflow; %130g of carbs, 80 
 Cout(6) = (flow*Cin(6) + (sodiumintake/(700*22.99*1440)))/outflow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
 Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/outflow; %calcium intake should be around 1000 mg
 Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/outflow;%iron intake will be approximately 8 mg for males and 18 mg for females
-
-
 
 end
