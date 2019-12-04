@@ -3,7 +3,7 @@ function mainfunction2FUCKINGBROKEN()
 age = 50;%30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
-anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
+anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
 FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
 BP=100; %avg blood pressure in mmHg
 RQ=0.825;%reaction quotients for the general body and
@@ -75,7 +75,7 @@ bloodflowvec=[bloodflow0];
 bloodweightvec=[bloodweight];
 heartvec=[60];
 BPvec=[100];
-for loop=1:500
+for loop=1:1440
     
    
     
@@ -486,7 +486,7 @@ elseif FerritinStores == 0 && Mirondif>0
 end
 
 %Calculate current blood pressure based on hematocrit and blood volume
-BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvectori(1)/cE0)-0.8886);
+BP1=(38.178*log(bloodweight/basebloodweight)+100);%*(1.8886*(cvectori(1)/cE0)-0.8886);
 end
 
 
