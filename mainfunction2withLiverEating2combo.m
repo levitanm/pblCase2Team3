@@ -11,10 +11,9 @@ RQ=0.825;%reaction quotients for the general body and
 
 if (40>=age) %if/else statement that sets heart rate based on age, in bpm
     baseheartrate = 60;
-else (40 < age)
-    baseheartrate=70;
+else 
+    baseheartrate= 70;
 end
-
 
 %Intake of various nutrients
 carbs=130;
@@ -28,17 +27,13 @@ else
 end
 
 bloodweight=0.07*mass; %sets mass of blood in the body based on percentage composition of blood and bodyweight
-
-
 %SV=mass; %stroke volume, blood pumped out of heart per beat in mL
 
 bloodflow0 = 1000*bloodweight/1.06; %blood flow out of heart per minute in mL, divided by density of 1.06 g/mL (steady state value)
 
-
 % cvector = concentration vector, [cE, cNa, cCa, cIron, cGlucose, cO2,
 % cCO2, cHCO3], where c = "concentration of", and the letters are our
 % components
-
 
 if gender == 0 %if loop sets volume percentage of red blood cells based on gender
     cE0 = 0.4345;
@@ -56,9 +51,9 @@ cGlucose = 0.0000055;
 %Na concentration in mol/mL
 cNa = 0.000137;
 %Concentration of Ca in mol/mL
-cCa = 0.00000118;
+cCa = 0.00000248;
 %Concentration of iron in mol/mL
-cIron = 0.00012592;
+cIron = 7.2231e-06;
 
 cvector0 = [cE0 cO2 cCO2 cHCO3 cGlucose cNa cCa cIron]; %concentration in the blood, in moles? mL/mL of blood
 
@@ -70,10 +65,10 @@ cGlucosetrack=[cvector0(5)];
 cNatrack=[cvector0(6)];
 cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
-
+heartratetrack = [baseheartrate];
 for loop=1:1440
     heartrate=baseheartrate+0.1346*(cE0*bloodflow0-cvector0(1)*bloodflow0);
-    bloodflow0 = (heartrate/60)*bloodflow0;
+    bloodflow0 = (heartrate/baseheartrate)*bloodflow0;
     % all blood per min for 60 beats per min -> all blood per 60 beats
     %(heartrate/60)*bloodflow0
     
@@ -110,7 +105,7 @@ for loop=1:1440
     Mvectorheart=0.3*V*cvector1;
     cvectorliverin=(Mvectorotherbloodliver+Mvectorheart)/V;
     
-    [BFliverj, cvectorliverj, FerritinStores1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores);
+    [BFliverj, cvectorliverj, FerritinStores1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores, loop);
     %Redirect blood from liver to other blood and mix the two
     FerritinStores=FerritinStores1;
     Mvectorotherbloodj=(cvectorotherbloodj*(BFotherbloodj-0.7*V))+(cvectorliverj*BFliverj);
@@ -124,7 +119,7 @@ for loop=1:1440
     BFotherbloodj=BFotherbloodj-BFkidneyi;
     %Have the kidneys process the blood they receive
     
-    [BFkidneyj, cvectorkidneyj] = kidney(BFkidneyi, cvectorotherbloodj,RQ,mass, Ci);
+    [BFkidneyj, cvectorkidneyj] = kidney(BFkidneyi, cvectorotherbloodj,RQ,mass, Ci, V);
     %Send blood processed in kidneys back to other blood, pool with brain, create Mvector
     Mvectorotherblood=(BFotherbloodj*cvectorotherbloodj)+(BFkidneyj*cvectorkidneyj)+(BFbrainj*cvectorbrainj);
     %Reset the bloodflow back into the lungs to the blood flow we just computed
@@ -141,54 +136,82 @@ for loop=1:1440
     cNatrack=[cNatrack cvector0(6)];
     cCatrack=[cCatrack cvector0(7)];
     cIrontrack=[cIrontrack cvector0(8)];
-    
+    heartratetrack = [heartratetrack heartrate];
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
 end
+% figure
+% plot(0:loop(end),heartratetrack)
 
 figure
-plot(0:loop(end),cEtrack)
+plot(0:loop(end),cEtrack,'k','LineWidth',2)
 title('Erythrocyte Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Erythrocyte Concentration %Volume')
+v1 = [0 .43; loop(end) .43; loop(end) .57; 0 .57;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+
+% v2 = [0 .57; loop(end) .57;];
+% f2 = [1 2];
+% patch('Faces',f1,'Vertices',v1,'FaceColor','red','FaceAlpha',.1);
+
 
 figure
-plot(0:loop(end),cO2track)
+plot(0:loop(end),cO2track,'k','LineWidth',2)
 title('O2 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('O2 Concentration in mol/mL')
+v1 = [0 7.12e-6; loop(end) 7.12e-6; loop(end) 9.24e-6; 0 9.24e-6;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cCO2track)
+plot(0:loop(end),cCO2track,'k','LineWidth',2)
 title('CO2 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('CO2 Concentration in mol/mL')
+v1 = [0 2.15e-5; loop(end) 2.15e-5; loop(end) 2.33e-5; 0 2.33e-5;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cHCO3track)
+plot(0:loop(end),cHCO3track,'k','LineWidth',2)
 title('HCO3 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('HCO3 Concentration in mol/mL')
+v1 = [0 1.93e-5; loop(end) 1.93e-5; loop(end) 2.03e-5; 0 2.03e-5;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cGlucosetrack)
+plot(0:loop(end),cGlucosetrack,'k','LineWidth',2)
 title('Glucose Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Glucose Concentration in mol/mL')
+v1 = [0 3.8855e-6; loop(end) 3.8855e-6; loop(end) 9.991e-6; 0 9.991e-6;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cNatrack)
+plot(0:loop(end),cNatrack,'k','LineWidth',2)
 title('Na Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Na Concentration in mol/mL')
+v1 = [0 1.35e-4; loop(end) 1.35e-4; loop(end) 1.45e-4; 0 1.45e-4;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cCatrack)
+plot(0:loop(end),cCatrack,'k','LineWidth',2)
 title('Ca Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Ca Concentration in mol/mL')
+v1 = [0 2.2e-6; loop(end) 2.2e-6; loop(end) 2.7e-6; 0 2.7e-6;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
 
 figure
-plot(0:loop(end),cIrontrack)
+plot(0:loop(end),cIrontrack,'k','LineWidth',2)
 title('Iron Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Iron Concentration in mol/mL')
@@ -298,7 +321,7 @@ end
 
 
 
-function [bloodflowj, cvectorout, FerritinStores1]=liver(V,cvectori,G,mass,Ci,FerritinStores)
+function [bloodflowj, cvectorout, FerritinStores1]=liver(V,cvectori,G,mass,Ci,FerritinStores, loop)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
 %Input: G=Gender (1 if female, 0 if male)
@@ -439,8 +462,7 @@ elseif FerritinStores > Mirondif && Mirondif==0
 elseif FerritinStores < Mirondif && Mirondif>0
     Mironadd=FerritinStores;
     cvectorout(8)=(Mironadd+Mironin)/V;
-    FerritinStores1=0;
-    
+    FerritinStores1=0;   
 elseif FerritinStores == 0 && Mirondif >= 0
     
     cvectorout(8)=cvectori(8);
@@ -451,7 +473,7 @@ end
 end
 
 
-function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci)
+function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci, V)
 T=1440;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
 Kidneymass=(300/70000)*mass; %mass of the kidneys combined in grams
 
@@ -489,8 +511,11 @@ MNaj = Mvector(6) - MNaremoved;
 
 
 
-
-MCaj=Mvector(7) - 3.8981e-09*bloodflowi;
+x = (1000*.26)/(1000*40.08*1440);
+y = (17/5)*(bloodflowi-((3/34)*V));
+b = (((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)-bloodflowi))/((y+(.3*V)));
+c = (1-(bloodflowi/(y+(.3*V)-bloodflowi)));
+MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)))/((y+(.3*V))));
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
 rHCO3O2=Mvector(4)/Mvector(3);
@@ -533,6 +558,4 @@ Cout(5) = (flow*Cin(5) + (.8*carbs)/(180.156*1440))/flow; %130g of carbs, 80 per
 Cout(6) = (flow*Cin(6) + (sodiumintake/(700*22.99*1440)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
 Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/flow; %calcium intake should be around 1000 mg
 Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
-
-
 end
