@@ -68,7 +68,7 @@ cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
 heartratetrack = [baseheartrate];
 
-for loop=1:1440
+for loop=1:10000
     heartrate=(baseheartrate*cE0*basebloodweight)/(cvector0(1)*bloodweight);
     bloodflow0 = (heartrate/baseheartrate)*bloodflow0;
     % all blood per min for 60 beats per min -> all blood per 60 beats
@@ -143,7 +143,6 @@ for loop=1:1440
 end
 % figure
 % plot(0:loop(end),heartratetrack)
-
 figure
 plot(0:loop(end),cEtrack,'k','LineWidth',2)
 title('Erythrocyte Levels Over Time')
@@ -348,14 +347,22 @@ cvectorout=[0,0,0,0,0,0,0,0];
 
 p=1.2e10; %number of red blood cells per mL of PURE red blood cells
 
-%Calculate volume of the body
+%Calculate volume of blood in the body
 Vblood=0.07*mass*1000/1.056;
 %Calculate the number of RBCs entering liver based on concentration,
 %flow rate, and pure RBC density
 RBCi=p*V*cvectori(1);
+
+if G==0
+RBCnumber=5.4e9*Vblood;
+else
+RBCnumber=4.8e9*Vblood;   
+end
 %Consume some based on body size
-RBCcons=5.55555e-6*cvectori(1)*Vblood;
+RBCcons=5.55555e-6*RBCnumber;%just deleted*cvectori(1)
 %Find pure volume of RBCs we now have based on number and density
+
+
 VRBCj=(RBCi-RBCcons)/p;
 %Calculate volume of plasma that entered
 Vplasma=V*(1-cvectori(1));
