@@ -79,6 +79,10 @@ hemovec=[valueofhemoglobin];
 %mmHg
 baseBP=100;
 BPvec=[baseBP];
+
+%Useable O2 in the body (bound to hemoglobin)
+UseableO2 = 0.98;
+UseO2vec= [UseableO2];
 for loop=1:1440
     
     %heart rate changes based on erythrocyte concentration in order to
@@ -157,6 +161,10 @@ for loop=1:1440
     BPvec=[BPvec BP];
     valueofhemoglobin=34.52243959*basebloodweight*10*cvector0(1);
     hemovec=[hemovec valueofhemoglobin];
+    
+    UseableO2 = .98/basehemoglobin*valueofhemoglobin;
+    UseO2vec= [UseO2vec UseableO2];
+    
 end
 
 
@@ -248,6 +256,12 @@ plot(0:loop(end),BPvec,'k','LineWidth',2, 'DisplayName', 'Iron Concentration')
 title('Average Blood Pressure Over Time')
 xlabel('Time in Minutes')
 ylabel('Blood Pressure in mmHg')
+
+figure
+plot(0:loop(end),UseO2vec,'k','LineWidth',2, 'DisplayName', 'Iron Concentration')
+title('Useable O2 in Blood Over Time')
+xlabel('Time in Minutes')
+ylabel('Ratio of Useable O2 to Total O2')
 end
 
 function [bloodout, Cout, Ci] = lungs(vblood, Cvector, anemia, basehemoglobin, hemoglobin)
@@ -615,7 +629,7 @@ else
 Cout(1) = vRBCout/outflow; 
 end
 
-Cout(2) = (Cin(2)*flow-(0.374*Ci/(hemoglobin/basehemoglobin)))/flow;%-CO2cons;
+Cout(2) = (Cin(2)*flow-(0.374*Ci/(hemoglobin/basehemoglobin)))/flow;
 nCO2gen = 0.374*Ci*RQ;
 Cout(3) = (Cin(3)*flow + nCO2gen)/flow;
 rHCO3CO2 = Cin(4)/Cin(3);
