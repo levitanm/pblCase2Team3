@@ -244,6 +244,10 @@ plot(0:loop(end),cIrontrack,'k','LineWidth',2, 'DisplayName', 'Iron Concentratio
 title('Iron Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Iron Concentration in mol/mL')
+v1 = [0 7.2e-6; loop(end) 7.2e-6; loop(end) 7.4e-6; 0 7.4e-6;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
 plot(0:loop(end),hemovec,'k','LineWidth',2, 'DisplayName', 'Iron Concentration')
@@ -584,8 +588,8 @@ MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 %Calculate entry ratio of bicarbonate to CO2
 rHCO3O2=Mvector(4)/Mvector(3);
 if anemia == 1
-    MHCO3cons = 0;
-    MCO2cons = 0;
+    MHCO3cons = 2.9e-6*bloodflowi;
+    MCO2cons = (MHCO3cons/rHCO3O2);
 else
     MHCO3cons = 0;
     MCO2cons = 0;
