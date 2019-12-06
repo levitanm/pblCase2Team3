@@ -3,9 +3,9 @@ function mainfunction2withLiverEating2combo1bonesaddLiam()
 age = 50;%30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
-anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
+anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
 bleed = 0.01; %bleeding rate in mL/min, if anemic
-FerritinStores = 0;%0.0179; %Stored moles of iron in liver as ferritin
+FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
 
 RQ=0.825;%reaction quotients for the general body and
 %RQheart=0.7;
@@ -107,7 +107,7 @@ for loop=1:1440
     %Process each of these three blood flows in their respective organs
     [BFbrainj, cvectorbrainj] = brain(BFbraini, cvector1, mass, Ci);
     
-    [BFotherbloodj, cvectorotherbloodj, hemoglobinout] = otherblood(BFotherbloodi, cvector1, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed);
+    [BFotherbloodj, cvectorotherbloodj] = otherblood(BFotherbloodi, cvector1, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed);
     
     Mvectorotherbloodliver=0.7*V*cvectorotherbloodj;
     Mvectorheart=0.3*V*cvector1;
@@ -149,97 +149,90 @@ for loop=1:1440
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
     iter = iter + 1;
     BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvector0(1)/cE0)-0.8886);
-    hemoglobin=hemoglobin-hemoglobinout;
+    hemoglobin=34.52243959*basebloodweight/10*cvector0(1);
 end
 % figure
 % plot(0:loop(end),heartratetrack)
 
 figure
-plot(0:loop(end),cEtrack,'k','LineWidth',2)
+plot(0:loop(end),cEtrack,'k','LineWidth',2, 'DisplayName', 'Erythrocytes Concentration')
 title('Erythrocyte Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Erythrocyte Concentration %Volume')
 v1 = [0 .43; loop(end) .43; loop(end) .57; 0 .57;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
-
-% v2 = [0 .57; loop(end) .57;];
-% f2 = [1 2];
-% patch('Faces',f1,'Vertices',v1,'FaceColor','red','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 
 figure
-plot(0:loop(end),cO2track,'k','LineWidth',2)
+plot(0:loop(end),cO2track,'k','LineWidth',2, 'DisplayName', 'Oxygen Concentration')
 title('O2 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('O2 Concentration in mol/mL')
 v1 = [0 7.12e-6; loop(end) 7.12e-6; loop(end) 9.24e-6; 0 9.24e-6;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1,'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cCO2track,'k','LineWidth',2)
+plot(0:loop(end),cCO2track,'k','LineWidth',2, 'DisplayName', 'Carbon Dioxide Concentration')
 title('CO2 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('CO2 Concentration in mol/mL')
 v1 = [0 2.15e-5; loop(end) 2.15e-5; loop(end) 2.33e-5; 0 2.33e-5;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cHCO3track,'k','LineWidth',2)
+plot(0:loop(end),cHCO3track,'k','LineWidth',2, 'DisplayName', 'Bicarbonate Concentration')
 title('HCO3 Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('HCO3 Concentration in mol/mL')
 v1 = [0 1.93e-5; loop(end) 1.93e-5; loop(end) 2.03e-5; 0 2.03e-5;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cGlucosetrack,'k','LineWidth',2)
+plot(0:loop(end),cGlucosetrack,'k','LineWidth',2, 'DisplayName', 'Glucose Concentration')
 title('Glucose Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Glucose Concentration in mol/mL')
 v1 = [0 3.8855e-6; loop(end) 3.8855e-6; loop(end) 9.991e-6; 0 9.991e-6;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cNatrack,'k','LineWidth',2)
+plot(0:loop(end),cNatrack,'k','LineWidth',2, 'DisplayName', 'Sodium Concentration')
 title('Na Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Na Concentration in mol/mL')
 v1 = [0 1.35e-4; loop(end) 1.35e-4; loop(end) 1.45e-4; 0 1.45e-4;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cCatrack,'k','LineWidth',2)
+plot(0:loop(end),cCatrack,'k','LineWidth',2, 'DisplayName', 'Calcium Concentration')
 title('Ca Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Ca Concentration in mol/mL')
 v1 = [0 2.2e-6; loop(end) 2.2e-6; loop(end) 2.7e-6; 0 2.7e-6;];
 f1 = [1 2 3 4];
-patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1);
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 
 figure
-plot(0:loop(end),cIrontrack,'k','LineWidth',2)
+plot(0:loop(end),cIrontrack,'k','LineWidth',2, 'DisplayName', 'Iron Concentration')
 title('Iron Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Iron Concentration in mol/mL')
 end
 
 function [bloodout, Cout, Ci] = lungs(vblood, Cvector, anemia, basehemoglobin, hemoglobin)
-
-
-
-
-
-
-
-
-
-
 Cout = [];
 % anemia needs to be an input for the lungs function now
 Co = 0.21e-4; %concentration of oxygen in alveoli (21% b/c air - it's 0.21e-4 b/c otherwise the order of
@@ -255,7 +248,6 @@ Ci = (Cvector(2)*0.08206*310.15)/(0.0526*1000); %mL/mL, concentration of oxygen 
                                                 %oxygen going into lungs
                                                 %(40 mmHg)
 ViO2 = P*A*(Co - Ci); %mL/min
-ViO2 = ViO2*(hemoglobin/basehemoglobin);
 %convert ViO2 to mol/min
 niO2 = (ViO2*1)/(0.08206*310.15); %mol/min; convert mL to mol with pressure being atmospheric pressure
 niO2 = niO2/15; %divide molar flow rate by respiratory rate
@@ -264,22 +256,10 @@ C = niO2/(vblood*1.5); %mol/mL, divide by conversion factor of 1.5
 Ci = C*vblood*(hemoglobin/basehemoglobin); %concentration of oxygen from which other organs consume
 
 nO2i = vblood*(Cvector(2) + C);
-nO2cons = 0.05*Ci/(hemoglobin/basehemoglobin);%we changed this when we added mayas O2 code 
+nO2cons = 0.05*Ci;%we changed this when we added mayas O2 code 
 %nO2cons = 0.05*C*vblood; %we removed this when we added mayas O2 code
 nO2j = nO2i - nO2cons; %oxygen out, mol/min
 Cout(2) = nO2j/vblood; %mol/mL
-
-
-
-
-
-
-
-
-
-
-
-
 
 % Cout = [];
 % % Finding volumetric flow rate out of oxygen
@@ -290,18 +270,6 @@ Cout(2) = nO2j/vblood; %mol/mL
 % nO2cons = 0.05*CiO2*vblood;%.0002082515; %5.3 mL/min becomes .0002082515 mol/min
 % nO2j = nO2i - nO2cons; %O2 out, mol/min
 % Cout(2) = nO2j/vblood; %mol/mL
-
-
-
-
-
-
-
-
-
-
-
-
 
 % Finding volumetric flow rate out of carbon dioxide
 nCO2i = vblood*Cvector(3);
@@ -429,7 +397,7 @@ Vblood=0.07*mass*1000/1.056;
 RBCi=p*V*cvectori(1);
 
 %Consume some based on body size
-RBCcons=5.55555e-6*cvectori(1)*Vblood;
+RBCcons=5.55555e-6*cvectori(1)*Vblood*p;
 %Find pure volume of RBCs we now have based on number and density
 VRBCj=(RBCi-RBCcons)/p;
 %Calculate volume of plasma that entered
@@ -590,17 +558,21 @@ MNaj = Mvector(6) - MNaremoved;
 % MNacons = (100/1440)/1000;
 % MNaj = Mvector(6) - MNacons;
 
-
-
-
 x = (1000*.26)/(1000*40.08*1440);
 y = (17/5)*(bloodflowi-((3/34)*V));
-b = (((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)-bloodflowi))/((y+(.3*V)));
-c = (1-(bloodflowi/(y+(.3*V)-bloodflowi)));
-MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)))/((y+(.3*V))));
+% b = (((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)-bloodflowi))/((y+(.3*V)));
+% c = (1-(bloodflowi/(y+(.3*V)-bloodflowi)));
+MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))));%*(y+(.3*V)))/((y+(.3*V))));
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
-MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
 rHCO3O2=Mvector(4)/Mvector(3);
+% if anemia == 1
+%     MHCO3cons = 2.9e-06*bloodflowi;
+%     MCO2cons = (MHCO3cons/rHCO3O2)*bloodflowi;
+% else
+%     MHCO3cons = 0;
+%     MCO2Cons = 0;
+% end
+MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
 MHCO3gen=rHCO3O2*((Mvector(2)-MO2j)*RQ);
 MHCO3j=Mvector(4)+MHCO3gen;%-0.15*(Mvector(4))+(.004/T)
 
@@ -619,7 +591,7 @@ cvectorj=[cEj cO2j cCO2j cHCO3j cGlucosej cNaj cCaj cIronj];
 
 end
 
-function [outflow, Cout, hemoglobinout] = otherblood(flow, Cin, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed)
+function [outflow, Cout] = otherblood(flow, Cin, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed)
 Cout = [];
 outflow=flow;
 
@@ -628,7 +600,6 @@ outflow=flow;
 if anemia == 0
     Cout(1) = Cin(1);
     ironout=0;
-    hemoglobinout=0;
 else
     RBCin = flow*Cin(1)*1.2e10;
     vRBCin = flow*Cin(1);
@@ -636,7 +607,6 @@ else
     RBCout = RBCin - RBClost;
     vRBCout = RBCout/(1.2e10);
     ironout=1.197929*RBClost/1.2e10*1.79067e-5;
-    hemoglobinout=ironout*1.538461538e-5;
 Cout(1) = vRBCout/outflow; 
 end
 
