@@ -1,9 +1,9 @@
 function mainfunction2withLiverEating2combo1bonesaddLiam()
 
-age = 50;%30; %Age in years
+age = 30;%30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
-anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
+anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
 bleed = 0.01; %bleeding rate in mL/min, if anemic
 FerritinStores = 0;%0.0179; %Stored moles of iron in liver as ferritin
 
@@ -11,9 +11,9 @@ RQ=0.825;%reaction quotients for the general body and
 %RQheart=0.7;
 
 if (40>=age) %if/else statement that sets heart rate based on age, in bpm
-    baseheartrate = 60;
+    baseheartrate = 83;
 else 
-    baseheartrate= 70;
+    baseheartrate= 87;
 end
 
 %Intake of various nutrients
@@ -71,13 +71,11 @@ cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
 heartratetrack = [baseheartrate];
 bloodflowvec=[bloodflow0];
-iter = 0;
 for loop=1:10000
     heartrate=(baseheartrate*cE0*basebloodweight)/(cvector0(1)*basebloodweight);
     bloodflow0 = (heartrate/baseheartrate)*(1000*basebloodweight/1.06);
     % all blood per min for 60 beats per min -> all blood per 60 beats
     %(heartrate/60)*bloodflow0
-    
     
     %Run initial venous blood through the heart
     [bloodflow, cvector, Ci] = lungs(bloodflow0, cvector0, anemia, basehemoglobin, hemoglobin);
@@ -145,14 +143,13 @@ for loop=1:10000
     cIrontrack=[cIrontrack cvector0(8)];
     heartratetrack = [heartratetrack heartrate];
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
-    iter = iter + 1;
     %BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvector0(1)/cE0)-0.8886);
     hemoglobin=hemoglobin-hemoglobinout;
 end
 % figure
 % plot(0:loop(end),heartratetrack)
 
-figure
+subplot(2,2,1)
 plot(0:loop(end),cEtrack,'k','LineWidth',2, 'DisplayName', 'Erythrocytes Concentration')
 title('Erythrocyte Levels Over Time')
 xlabel('Time in Minutes')
@@ -160,10 +157,15 @@ ylabel('Erythrocyte Concentration %Volume')
 v1 = [0 .43; loop(end) .43; loop(end) .57; 0 .57;];
 f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+if anemia == 1
+    v2 = [0 .37; loop(end) .37];
+    f2 = [1 2];
+    patch('Faces',f2,'Vertices',v2,'FaceColor','none', 'EdgeColor','red','LineStyle','-.','DisplayName','Anemia Concentration Threshold')
+end
 legend
 
 
-figure
+subplot(2,2,2)
 plot(0:loop(end),cO2track,'k','LineWidth',2, 'DisplayName', 'Oxygen Concentration')
 title('O2 Levels Over Time')
 xlabel('Time in Minutes')
@@ -173,7 +175,7 @@ f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1,'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
 legend
 
-figure
+subplot(2,2,3)
 plot(0:loop(end),cCO2track,'k','LineWidth',2, 'DisplayName', 'Carbon Dioxide Concentration')
 title('CO2 Levels Over Time')
 xlabel('Time in Minutes')
@@ -183,7 +185,7 @@ f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
 legend
 
-figure
+subplot(2,2,4)
 plot(0:loop(end),cHCO3track,'k','LineWidth',2, 'DisplayName', 'Bicarbonate Concentration')
 title('HCO3 Levels Over Time')
 xlabel('Time in Minutes')
@@ -194,6 +196,7 @@ patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle','
 legend
 
 figure
+subplot(2,2,1)
 plot(0:loop(end),cGlucosetrack,'k','LineWidth',2, 'DisplayName', 'Glucose Concentration')
 title('Glucose Levels Over Time')
 xlabel('Time in Minutes')
@@ -203,7 +206,7 @@ f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
 legend
 
-figure
+subplot(2,2,2)
 plot(0:loop(end),cNatrack,'k','LineWidth',2, 'DisplayName', 'Sodium Concentration')
 title('Na Levels Over Time')
 xlabel('Time in Minutes')
@@ -213,7 +216,7 @@ f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
 legend
 
-figure
+subplot(2,2,3)
 plot(0:loop(end),cCatrack,'k','LineWidth',2, 'DisplayName', 'Calcium Concentration')
 title('Ca Levels Over Time')
 xlabel('Time in Minutes')
@@ -223,11 +226,15 @@ f1 = [1 2 3 4];
 patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
 legend
 
-figure
+subplot(2,2,4)
 plot(0:loop(end),cIrontrack,'k','LineWidth',2, 'DisplayName', 'Iron Concentration')
 title('Iron Levels Over Time')
 xlabel('Time in Minutes')
 ylabel('Iron Concentration in mol/mL')
+v1 = [0 7.2e-6; loop(end) 7.2e-6; loop(end) 7.4e-6; 0 7.4e-6;];
+f1 = [1 2 3 4];
+patch('Faces',f1,'Vertices',v1,'FaceColor','green','FaceAlpha',.1, 'LineStyle',':', 'DisplayName','Normal Physiological Values Range');
+legend
 end
 
 function [bloodout, Cout, Ci] = lungs(vblood, Cvector, anemia, basehemoglobin, hemoglobin)
@@ -602,8 +609,8 @@ MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)))/((y+(.3*V))))
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 rHCO3O2=Mvector(4)/Mvector(3);
 if anemia == 1
-    MHCO3cons = 0;%0.002577919061758;
-    MCO2cons = 0;%(MHCO3cons/rHCO3O2);
+    MHCO3cons = 2.9e-6*bloodflowi;
+    MCO2cons = (MHCO3cons/rHCO3O2);
 else
     MHCO3cons = 0;
     MCO2cons = 0;
@@ -639,7 +646,7 @@ if anemia == 0
 else
     RBCin = flow*Cin(1)*1.2e10;
     vRBCin = flow*Cin(1);
-    RBClost = 521400000;%5214000; %bleed*Cin(1)*1.2e10;
+    RBClost = 521400000;% the number of red blood cells lost per minute is usually 5214000 but we upscale this value by 100 in order to illustrate the effect of anemia better
     RBCout = RBCin - RBClost;
     vRBCout = RBCout/(1.2e10);
     ironout=1.197929*RBClost/1.2e10*1.79067e-5;
