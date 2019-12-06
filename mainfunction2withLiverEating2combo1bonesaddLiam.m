@@ -5,7 +5,7 @@ gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
 anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
 bleed = 0.01; %bleeding rate in mL/min, if anemic
-FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
+FerritinStores = 0;%0.0179; %Stored moles of iron in liver as ferritin
 
 RQ=0.825;%reaction quotients for the general body and
 %RQheart=0.7;
@@ -107,7 +107,7 @@ for loop=1:1440
     %Process each of these three blood flows in their respective organs
     [BFbrainj, cvectorbrainj] = brain(BFbraini, cvector1, mass, Ci);
     
-    [BFotherbloodj, cvectorotherbloodj] = otherblood(BFotherbloodi, cvector1, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed);
+    [BFotherbloodj, cvectorotherbloodj, hemoglobinout] = otherblood(BFotherbloodi, cvector1, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed);
     
     Mvectorotherbloodliver=0.7*V*cvectorotherbloodj;
     Mvectorheart=0.3*V*cvector1;
@@ -149,7 +149,7 @@ for loop=1:1440
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
     iter = iter + 1;
     BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvector0(1)/cE0)-0.8886);
-    hemoglobin=34.52243959*basebloodweight/10*cvector0(1);
+    hemoglobin=hemoglobin-hemoglobinout;
 end
 % figure
 % plot(0:loop(end),heartratetrack)
@@ -255,6 +255,7 @@ Ci = (Cvector(2)*0.08206*310.15)/(0.0526*1000); %mL/mL, concentration of oxygen 
                                                 %oxygen going into lungs
                                                 %(40 mmHg)
 ViO2 = P*A*(Co - Ci); %mL/min
+ViO2 = ViO2*(hemoglobin/basehemoglobin);
 %convert ViO2 to mol/min
 niO2 = (ViO2*1)/(0.08206*310.15); %mol/min; convert mL to mol with pressure being atmospheric pressure
 niO2 = niO2/15; %divide molar flow rate by respiratory rate
@@ -263,7 +264,7 @@ C = niO2/(vblood*1.5); %mol/mL, divide by conversion factor of 1.5
 Ci = C*vblood*(hemoglobin/basehemoglobin); %concentration of oxygen from which other organs consume
 
 nO2i = vblood*(Cvector(2) + C);
-nO2cons = 0.05*Ci;%we changed this when we added mayas O2 code 
+nO2cons = 0.05*Ci/(hemoglobin/basehemoglobin);%we changed this when we added mayas O2 code 
 %nO2cons = 0.05*C*vblood; %we removed this when we added mayas O2 code
 nO2j = nO2i - nO2cons; %oxygen out, mol/min
 Cout(2) = nO2j/vblood; %mol/mL
@@ -618,7 +619,7 @@ cvectorj=[cEj cO2j cCO2j cHCO3j cGlucosej cNaj cCaj cIronj];
 
 end
 
-function [outflow, Cout] = otherblood(flow, Cin, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed)
+function [outflow, Cout, hemoglobinout] = otherblood(flow, Cin, carbs, calciumintake, sodiumintake, ironintake, Ci, RQ, anemia, bleed)
 Cout = [];
 outflow=flow;
 
@@ -627,6 +628,7 @@ outflow=flow;
 if anemia == 0
     Cout(1) = Cin(1);
     ironout=0;
+    hemoglobinout=0;
 else
     RBCin = flow*Cin(1)*1.2e10;
     vRBCin = flow*Cin(1);
@@ -634,6 +636,7 @@ else
     RBCout = RBCin - RBClost;
     vRBCout = RBCout/(1.2e10);
     ironout=1.197929*RBClost/1.2e10*1.79067e-5;
+    hemoglobinout=ironout*1.538461538e-5;
 Cout(1) = vRBCout/outflow; 
 end
 
