@@ -3,7 +3,7 @@ function mainfunction2withLiverEating2combo1bonesaddLiam()
 age = 50;%30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
-anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
+anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
 bleed = 0.01; %bleeding rate in mL/min, if anemic
 FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
 
@@ -127,7 +127,7 @@ for loop=1:1440
     BFotherbloodj=BFotherbloodj-BFkidneyi;
     %Have the kidneys process the blood they receive
     
-    [BFkidneyj, cvectorkidneyj] = kidney(BFkidneyi, cvectorotherbloodj,RQ,mass, Ci, V);
+    [BFkidneyj, cvectorkidneyj] = kidney(BFkidneyi, cvectorotherbloodj,RQ,mass, Ci, V, anemia);
     %Send blood processed in kidneys back to other blood, pool with brain, create Mvector
     Mvectorotherblood=(BFotherbloodj*cvectorotherbloodj)+(BFkidneyj*cvectorkidneyj)+(BFbrainj*cvectorbrainj);
     %Reset the bloodflow back into the lungs to the blood flow we just computed
@@ -523,7 +523,7 @@ end
 end
 
 
-function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci, V)
+function [bloodflowj, cvectorj] = kidney(bloodflowi, cvectori, RQ, mass, Ci, V, anemia)
 T=1440;%Multiplier that scales up the time period of interest to one day (required for glucose equation)
 Kidneymass=(300/70000)*mass; %mass of the kidneys combined in grams
 
@@ -565,16 +565,16 @@ y = (17/5)*(bloodflowi-((3/34)*V));
 MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))));%*(y+(.3*V)))/((y+(.3*V))));
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 rHCO3O2=Mvector(4)/Mvector(3);
-% if anemia == 1
-%     MHCO3cons = 2.9e-06*bloodflowi;
-%     MCO2cons = (MHCO3cons/rHCO3O2)*bloodflowi;
-% else
-%     MHCO3cons = 0;
-%     MCO2Cons = 0;
-% end
-MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ);
+if anemia == 1
+    MHCO3cons = 2.9e-06*bloodflowi;
+    MCO2cons = (MHCO3cons/rHCO3O2);
+else
+    MHCO3cons = 0;
+    MCO2cons = 0;
+end
+MCO2j=Mvector(3)+((Mvector(2)-MO2j)*RQ)-MCO2cons;
 MHCO3gen=rHCO3O2*((Mvector(2)-MO2j)*RQ);
-MHCO3j=Mvector(4)+MHCO3gen;%-0.15*(Mvector(4))+(.004/T)
+MHCO3j=Mvector(4)+MHCO3gen-MHCO3cons;%-0.15*(Mvector(4))+(.004/T)
 
 %Recompute all concentrations using original mass of blood and new values
 
