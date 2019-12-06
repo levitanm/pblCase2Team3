@@ -29,8 +29,7 @@ end
 
 basebloodweight=0.07*mass; %sets mass of blood in the body based on percentage composition of blood and bodyweight
 %SV=mass; %stroke volume, blood pumped out of heart per beat in mL
-bloodweight=basebloodweight;
-bloodflow0 = 1000*bloodweight/1.06; %blood flow out of heart per minute in mL, divided by density of 1.06 g/mL (steady state value)
+bloodflow0 = 1000*basebloodweight/1.06; %blood flow out of heart per minute in mL, divided by density of 1.06 g/mL (steady state value)
 
 
 
@@ -73,10 +72,9 @@ cIrontrack=[cvector0(8)];
 heartratetrack = [baseheartrate];
 bloodflowvec=[bloodflow0];
 iter = 0;
-%while cvector0(1) >=.375
-for loop=1:1440
-    heartrate=(baseheartrate*cE0*basebloodweight)/(cvector0(1)*bloodweight);
-    bloodflow0 = (heartrate/baseheartrate)*bloodflow0;
+for loop=1:10000
+    heartrate=(baseheartrate*cE0*basebloodweight)/(cvector0(1)*basebloodweight);
+    bloodflow0 = (heartrate/baseheartrate)*(1000*basebloodweight/1.06);
     % all blood per min for 60 beats per min -> all blood per 60 beats
     %(heartrate/60)*bloodflow0
     
@@ -133,7 +131,7 @@ for loop=1:1440
     %Reset the bloodflow back into the lungs to the blood flow we just computed
     bloodflow0=BFotherbloodj+BFkidneyj+BFbrainj;
     bloodflowvec=[bloodflowvec bloodflow0];
-    bloodflow0 = 1000*bloodweight/1.06;
+    %bloodflow0 = 1000*bloodweight/1.06;
     %Recompute cvector0 by dividing Mvectorotherblood by bloodflow0
     cvector0=Mvectorotherblood/bloodflow0;
     
@@ -148,7 +146,7 @@ for loop=1:1440
     heartratetrack = [heartratetrack heartrate];
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
     iter = iter + 1;
-    BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvector0(1)/cE0)-0.8886);
+    %BP1=(38.178*log(bloodweight/basebloodweight)+100)*(1.8886*(cvector0(1)/cE0)-0.8886);
     hemoglobin=hemoglobin-hemoglobinout;
 end
 % figure
@@ -604,8 +602,8 @@ MCaj= Mvector(7) - ((((x/y)*(y-(.7*V))+(((.7*x)/y)*V))*(y+(.3*V)))/((y+(.3*V))))
 MGlucosej=Mvector(5)-(Mvector(5)*(0.226/((Mvector(5))*T)));
 rHCO3O2=Mvector(4)/Mvector(3);
 if anemia == 1
-    MHCO3cons = 2.9e-06*bloodflowi;
-    MCO2cons = (MHCO3cons/rHCO3O2);
+    MHCO3cons = 0;%0.002577919061758;
+    MCO2cons = 0;%(MHCO3cons/rHCO3O2);
 else
     MHCO3cons = 0;
     MCO2cons = 0;
