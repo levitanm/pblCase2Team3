@@ -67,8 +67,10 @@ cNatrack=[cvector0(6)];
 cCatrack=[cvector0(7)];
 cIrontrack=[cvector0(8)];
 heartratetrack = [baseheartrate];
-
-for loop=1:10000
+bloodflowvec=[bloodflow0];
+iter = 0;
+while cvector0(1) >=.375
+%for loop=1:100000
     heartrate=(baseheartrate*cE0*basebloodweight)/(cvector0(1)*bloodweight);
     bloodflow0 = (heartrate/baseheartrate)*bloodflow0;
     % all blood per min for 60 beats per min -> all blood per 60 beats
@@ -107,7 +109,7 @@ for loop=1:10000
     Mvectorheart=0.3*V*cvector1;
     cvectorliverin=(Mvectorotherbloodliver+Mvectorheart)/V;
     
-    [BFliverj, cvectorliverj, FerritinStores1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores, loop);
+    [BFliverj, cvectorliverj, FerritinStores1] = liver(BFliveri,cvectorliverin,gender,mass,Ci,FerritinStores);
     %Redirect blood from liver to other blood and mix the two
     FerritinStores=FerritinStores1;
     Mvectorotherbloodj=(cvectorotherbloodj*(BFotherbloodj-0.7*V))+(cvectorliverj*BFliverj);
@@ -126,7 +128,8 @@ for loop=1:10000
     Mvectorotherblood=(BFotherbloodj*cvectorotherbloodj)+(BFkidneyj*cvectorkidneyj)+(BFbrainj*cvectorbrainj);
     %Reset the bloodflow back into the lungs to the blood flow we just computed
     bloodflow0=BFotherbloodj+BFkidneyj+BFbrainj;
-    
+    bloodflowvec=[bloodflowvec bloodflow0];
+    bloodflow0 = 1000*bloodweight/1.06;
     %Recompute cvector0 by dividing Mvectorotherblood by bloodflow0
     cvector0=Mvectorotherblood/bloodflow0;
     
@@ -140,9 +143,11 @@ for loop=1:10000
     cIrontrack=[cIrontrack cvector0(8)];
     heartratetrack = [heartratetrack heartrate];
     A = [cvector; cvector1; cvectorbrainj; cvectorotherbloodj; cvectorliverj; cvectorkidneyj; cvector0];
+    iter = iter + 1;
 end
 % figure
 % plot(0:loop(end),heartratetrack)
+
 figure
 plot(0:loop(end),cEtrack,'k','LineWidth',2)
 title('Erythrocyte Levels Over Time')
@@ -322,7 +327,7 @@ end
 
 
 
-function [bloodflowj, cvectorout, FerritinStores1]=liver(V,cvectori,G,mass,Ci,FerritinStores, loop)
+function [bloodflowj, cvectorout, FerritinStores1]=liver(V,cvectori,G,mass,Ci,FerritinStores)
 %This function will deliver output volumetric flow rates for the concentration of
 %the 8 components (mol/mLmin) out of the liver
 %Input: G=Gender (1 if female, 0 if male)
@@ -347,29 +352,22 @@ cvectorout=[0,0,0,0,0,0,0,0];
 
 p=1.2e10; %number of red blood cells per mL of PURE red blood cells
 
-%Calculate volume of blood in the body
+%Calculate volume of the body
 Vblood=0.07*mass*1000/1.056;
 %Calculate the number of RBCs entering liver based on concentration,
 %flow rate, and pure RBC density
 RBCi=p*V*cvectori(1);
 
-if G==0
-RBCnumber=5.4e9*Vblood;
-else
-RBCnumber=4.8e9*Vblood;   
-end
 %Consume some based on body size
-RBCcons=5.55555e-6*RBCnumber;%just deleted*cvectori(1)
+RBCcons=5.55555e-6*cvectori(1)*Vblood;
 %Find pure volume of RBCs we now have based on number and density
-
-
 VRBCj=(RBCi-RBCcons)/p;
 %Calculate volume of plasma that entered
 Vplasma=V*(1-cvectori(1));
 %Calculate new concentrations based on volumeRBCs/total volume
 cvectorout(1)=VRBCj/(VRBCj+Vplasma);
 %Bloodflow out = blood cells out + plasma volume
-bloodflowj=Vplasma+VRBCj;
+bloodflowj=V;%Vplasma+VRBCj;
 
 %Calculates concentration flow rate of O2 out
 %No generation of O2
@@ -484,7 +482,6 @@ elseif FerritinStores == 0 && Mirondif>0
     cvectorout(8)=cvectori(8);
 end
 
-
 end
 
 
@@ -559,12 +556,12 @@ outflow=flow;
 %Accounts for the bleeding of a certain volume at a steady rate when the
 %patient is anemic    
 if anemia == 0
-Cout(1) = Cin(1);
+    Cout(1) = Cin(1);
 else
     RBCin = flow*Cin(1)*1.2e10;
-    RBClost = bleed*Cin(1)*1.2e10;
+    RBClost = 5214000; %bleed*Cin(1)*1.2e10;
     RBCout = RBCin - RBClost;
-    vRBCout = RBCout/1.2e10;
+    vRBCout = RBCout/(1.2e10);
 Cout(1) = vRBCout/outflow; 
 end
 
@@ -575,6 +572,12 @@ rHCO3CO2 = Cin(4)/Cin(3);
 Cout(4) = (Cin(4)*flow + nCO2gen*rHCO3CO2)/flow;
 Cout(5) = (flow*Cin(5) + (.8*carbs)/(180.156*1440))/flow; %130g of carbs, 80 percent is directly translated to glucose, 20% is fructose and galactose which goes to the liver and may be converted to glucose at a later stage so another term is incoming
 Cout(6) = (flow*Cin(6) + (sodiumintake/(700*22.99*1440)))/flow; %500 mg of sodium needed for vital functions so start with sodium intake being 500 mg
-Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/flow; %calcium intake should be around 1000 mg
+if anemia == 0
+    Cout(7) = (flow*Cin(7) + (calciumintake*.26)/(1000*40.08*1440))/flow; %calcium intake should be around 1000 mg
+elseif anemia == 1
+    Cainput = (flow*Cin(7) + (calciumintake*.15)/(1000*40.08*1440))/flow; %assume, under anemia, calcium retention rate becomes 15%
+    Cagen = ((calciumintake*.11)/(1000*40.08*1440))/flow; %intake from bones because, when we retain less calcuim from diet, the blood maintains steady concentration of calcium by taking calcium from bones
+    Cout(7) = Cainput + Cagen;
+end
 Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
 end
