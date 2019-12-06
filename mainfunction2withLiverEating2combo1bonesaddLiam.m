@@ -3,7 +3,7 @@ function mainfunction2withLiverEating2combo1bonesaddLiam()
 age = 50;%30; %Age in years
 gender = 0; %Gender, 0=male, 1=female
 mass = 70; %Weight in kg
-anemia = 0; %Is the patient anemic? 1 if yes, 0 if no
+anemia = 1; %Is the patient anemic? 1 if yes, 0 if no
 bleed = 0.01; %bleeding rate in mL/min, if anemic
 FerritinStores = 0.0179; %Stored moles of iron in liver as ferritin
 
@@ -22,9 +22,9 @@ calciumintake=1000;
 sodiumintake=500;
 
 if gender==1
-    ironintake=18;
-else
     ironintake=8;
+else
+    ironintake=18;
 end
 
 basebloodweight=0.07*mass; %sets mass of blood in the body based on percentage composition of blood and bodyweight
@@ -309,6 +309,7 @@ nCO2cons = nCO2i*(1-(48/52));%vblood*(.0000015716531); %vblood(mL/min) and conce
 nCO2j = nCO2i - nCO2cons; %CO2 out, L/min
 Cout(3) = nCO2j/vblood;
 
+
 % Finding volumetric flow rate out of bicarbonate
 rHCO3CO2 = Cvector(4)/Cvector(3); %ratio of bicarbonate to carbon dioxide in blood leaving lungs
 nHCO3j = rHCO3CO2*nCO2j; %HCO3 out, mol/min
@@ -521,11 +522,11 @@ cvectorout(5) = nGlucosej/V;
 
 %determine molar flow rate of iron in
 Mironin=V*cvectori(8);
-Mirondif=(V*0.00012592)-Mironin;%this number is desired steady state iron concentration in the blood
+Mirondif=(V*7.2231e-06)-Mironin;%this number is desired steady state iron concentration in the blood
 
 if Mirondif < 0
     FerritinStores1=FerritinStores-Mirondif;
-    cvectorout(8)=0.00012592;
+    cvectorout(8)=7.2231e-06;
 elseif Mirondif == 0
     cvectorout(8)=cvectori(8);
     FerritinStores1=FerritinStores;
@@ -625,12 +626,14 @@ outflow=flow;
 %patient is anemic    
 if anemia == 0
     Cout(1) = Cin(1);
+    ironout=0;
 else
     RBCin = flow*Cin(1)*1.2e10;
     vRBCin = flow*Cin(1);
     RBClost = 521400000;%5214000; %bleed*Cin(1)*1.2e10;
     RBCout = RBCin - RBClost;
     vRBCout = RBCout/(1.2e10);
+    ironout=1.197929*RBClost/1.2e10*1.79067e-5;
 Cout(1) = vRBCout/outflow; 
 end
 
@@ -648,5 +651,5 @@ elseif anemia == 1
     Cagen = ((calciumintake*.11)/(1000*40.08*1440))/flow; %intake from bones because, when we retain less calcuim from diet, the blood maintains steady concentration of calcium by taking calcium from bones
     Cout(7) = Cainput + Cagen;
 end
-Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
+Cout(8) = (flow*Cin(8)+ (ironintake*.18)/(1000*55.845*1440)-1/(1440*1000*55.845)-(ironout))/flow;%iron intake will be approximately 8 mg for males and 18 mg for females
 end
